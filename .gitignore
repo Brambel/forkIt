@@ -1,2 +1,14 @@
 *.ipch
 *.opendb
+Debug/forkIt.exe
+.vs/forkIt/v14/.suo
+forkIt/Debug/vc140.pdb
+forkIt/Debug/forkIt.tlog/link.write.1.tlog
+forkIt/Debug/stdafx.obj
+forkIt/Debug/forkIt.tlog/link.command.1.tlog
+Debug/forkIt.pdb
+Debug/forkIt.ilk
+.vs/forkIt/v14/.suo
+forkIt/Debug/forkIt.pch
+forkIt/Debug
+.vs/forkIt/v14/.suo
