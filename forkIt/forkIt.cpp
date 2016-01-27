@@ -18,22 +18,25 @@ arguments* readPrompt();
 arguments* writePrompt();
 void testArgs(arguments*);
 void testSuite(arguments*, string);
+bool isValid(arguments*);
 
 int main()
 {
 	while (true) {
 	
 		arguments * temp = writePrompt();
-
-		if (fork() != 0) {
-
-			waitpid(-1, &status, 0);
+		if (isValid(temp)) {
+			if (fork() != 0) {
+				//parent
+				//waitpid(-1, &status, 0);
+			}
+			else {
+				//child
+				//execve()
+			}
+			cout << "in\n";
 		}
-		else{
-
-			execve()
-		}
-		system("pause");
+		//system("pause");
 	}
 
 	system("pause");
@@ -62,7 +65,16 @@ arguments* readPrompt() {
 
 	return temp;
 }
+bool isValid(arguments * args) {
 
+	char* comp = *args->argv;
+
+	if (_strcmpi("cd", comp)==0||_strcmpi("pwd", comp)==0) {
+		return true;
+	}
+	cout << "error, unkown command"<<endl;
+	return false;
+}
 arguments* writePrompt() {
 	cout << ">";
 	return readPrompt();
