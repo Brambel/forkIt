@@ -21,8 +21,21 @@ void testSuite(arguments*, string);
 
 int main()
 {
-	arguments * temp = writePrompt();
-	testArgs(temp);
+	while (true) {
+	
+		arguments * temp = writePrompt();
+
+		if (fork() != 0) {
+
+			waitpid(-1, &status, 0);
+		}
+		else{
+
+			execve()
+		}
+		system("pause");
+	}
+
 	system("pause");
     return 0;
 }
@@ -45,7 +58,7 @@ arguments* readPrompt() {
 		(*ptr) = rawInput[i];
 	}
 
-	testSuite(temp, rawInput);
+	//testSuite(temp, rawInput);  commented out for production
 
 	return temp;
 }
