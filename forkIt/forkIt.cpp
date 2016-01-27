@@ -17,6 +17,7 @@ struct arguments
 arguments* readPrompt();
 arguments* writePrompt();
 void testArgs(arguments*);
+void testSuite(arguments*, string);
 
 int main()
 {
@@ -44,6 +45,8 @@ arguments* readPrompt() {
 		(*ptr) = rawInput[i];
 	}
 
+	testSuite(temp, rawInput);
+
 	return temp;
 }
 
@@ -55,7 +58,7 @@ arguments* writePrompt() {
 void testArgs(arguments* args) { //just tests using our args class
 
 	char* ptr = (*args->argv);
-
+	cout << "there are " << (args->argc) << " arguments" << endl;
 	for (int i = 0; i < args->argc; ++i, ++ptr) {
 		while ((*ptr) != NULL) {
 			cout << (*ptr);
@@ -63,4 +66,15 @@ void testArgs(arguments* args) { //just tests using our args class
 		}
 		cout << '\n';
 	}
+}
+
+void testSuite(arguments* args, string input) {
+	
+	char* ptr = (*args->argv);
+	for (int i = 0; i < args->argc; ++i, ++ptr) {
+		if (!input.find(ptr, strlen(ptr)-1)) {
+			cout << "failed test at: " << i << endl;
+		}
+	}
+
 }
