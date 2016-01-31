@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <iostream>
 #include <cstring>
 
@@ -30,13 +31,15 @@ int main()
 	
 		arguments * temp = writePrompt();
 		if (isValid(temp)) {
+			int status;
 			if (fork() != 0) {
 				//parent
-				//waitpid(-1, &status, 0);
+				cout<<"parent thread"<<endl;
+				waitpid(-1, &status, 0);
 			}
 			else {
 				//child
-				//execve()
+				execv(*temp->argv, temp->argv);
 			}
 			cout << "in\n";
 		}
