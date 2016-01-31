@@ -1,9 +1,11 @@
-// forkIt.cpp : Defines the entry point for the console application.
-//
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <iostream>
+#include <cstring>
 
-#include "stdafx.h"
-#include "iostream"
-#include <string>
 
 #define sizeLim 10
 using namespace std;
@@ -20,9 +22,11 @@ void testArgs(arguments*);
 void testSuite(arguments*, string);
 bool isValid(arguments*);
 
+bool run;
 int main()
 {
-	while (true) {
+	run = true;
+	while (run) {
 	
 		arguments * temp = writePrompt();
 		if (isValid(temp)) {
@@ -39,7 +43,7 @@ int main()
 		//system("pause");
 	}
 
-	system("pause");
+	//system("pause");
     return 0;
 }
 
@@ -69,10 +73,14 @@ bool isValid(arguments * args) {
 
 	char* comp = *args->argv;
 
-	if (_strcmpi("cd", comp)==0||_strcmpi("pwd", comp)==0) {
+	if (strcmp("cd", comp)==0||strcmp("pwd", comp)==0) {
 		return true;
 	}
-	cout << "error, unkown command"<<endl;
+	else if(strcmp("quit", comp)==0){
+		run = false;
+	}else{
+		cout << "error, unkown command"<<endl;
+	}
 	return false;
 }
 arguments* writePrompt() {
