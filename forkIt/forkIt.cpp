@@ -28,16 +28,15 @@ bool run;
 extern char **environ;
 int main()
 {
-	//char* arg[] = {"ls", "-l", NULL};
-	//execvp(arg[0],arg);
+	
 	run = true;
 	while (run) {
 	
-		arguments * temp = writePrompt();		
+		arguments * temp = writePrompt();
+		
 		if (isValid(temp)) {
 			int status;
-			testArgs(temp);
-			cout<<&temp->argv<<endl;
+
 			if (fork() != 0) {
 				//parent
 				cout<<"parent thread start"<<endl;
@@ -46,9 +45,9 @@ int main()
 			}
 			else {
 				//child
+				//char* arg[] = {"ls", "-l", NULL};
+				//execvp(arg[0],arg);
 				cout<<"child start\n";
-				cout<<&temp->argv<<endl;
-				testArgs(temp);
 				execvp(temp->argv[0], temp->argv);
 				cout<<"failed\n";
 				return 0;
@@ -87,7 +86,6 @@ bool isValid(arguments* args) {
 	char * head = *args->argv;
 	char* comp = *args->argv;
 	bool tf = true;
-	cout<<comp<<endl;
 	if (strcmp("cd", comp)==0){
 		chdir(&comp[3]);
 		tf = false;
