@@ -34,14 +34,17 @@ int main()
 			int status;
 			if (fork() != 0) {
 				//parent
-				cout<<"parent thread"<<endl;
+				cout<<"parent thread start"<<endl;
 				waitpid(-1, &status, 0);
+				cout<<"parent thread stopd\n";
 			}
 			else {
 				//child
+				cout<<"child start\n";
 				execv(*temp->argv, temp->argv);
+				cout<<"child stop\n";
+				return 0;
 			}
-			cout << "in\n";
 		}
 		//system("pause");
 	}
@@ -76,15 +79,20 @@ bool isValid(arguments * args) {
 
 	char* comp = *args->argv;
 
-	if (strcmp("cd", comp)==0||strcmp("pwd", comp)==0) {
-		return true;
+	if (strcmp("cd", comp)==0){
+		chdir(&comp[3]);
+		return false;
+	}
+	else if(strcmp("pwd", comp)==0) {
+		char* WD = get_current_dir_name();
+		cout<<*WD<<endl;
+		delete WD;
+		return false;
 	}
 	else if(strcmp("quit", comp)==0){
 		run = false;
-	}else{
-		cout << "error, unkown command"<<endl;
 	}
-	return false;
+	return true;
 }
 arguments* writePrompt() {
 	cout << ">";
