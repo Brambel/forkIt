@@ -11,6 +11,7 @@
 #define sizeLim 10
 using namespace std;
 
+
 struct arguments
 {
 	int argc;
@@ -20,29 +21,36 @@ struct arguments
 arguments* readPrompt();
 arguments* writePrompt();
 void testArgs(arguments*);
-void testSuite(arguments*, string);
+void testSuite(arguments, string);
 bool isValid(arguments*);
 
 bool run;
+extern char **environ;
 int main()
 {
+	//char* arg[] = {"ls", "-l", NULL};
+	//execvp(arg[0],arg);
 	run = true;
 	while (run) {
 	
-		arguments * temp = writePrompt();
+		arguments * temp = writePrompt();		
 		if (isValid(temp)) {
 			int status;
+			testArgs(temp);
+			cout<<&temp->argv<<endl;
 			if (fork() != 0) {
 				//parent
 				cout<<"parent thread start"<<endl;
 				waitpid(-1, &status, 0);
-				cout<<"parent thread stopd\n";
+				cout<<"parent thread end\n";
 			}
 			else {
 				//child
 				cout<<"child start\n";
-				execv(*temp->argv, temp->argv);
-				cout<<"child stop\n";
+				cout<<&temp->argv<<endl;
+				testArgs(temp);
+				execvp(temp->argv[0], temp->argv);
+				cout<<"failed\n";
 				return 0;
 			}
 		}
@@ -61,7 +69,7 @@ arguments* readPrompt() {
 	char* ptr = new char[rawInput.length()+1];
 	
 	char* head = ptr;   //create unchanging head refrence  so we don't advance as we create new array
-	temp->argv = (&head);
+	
 
 	for (int i = 0; i < rawInput.length()+1; ++i, ++ptr) {//need to catch terminating null
 		if (rawInput[i] == ' ') {
@@ -70,37 +78,42 @@ arguments* readPrompt() {
 		}
 		(*ptr) = rawInput[i];
 	}
-
+	temp->argv = (&head);
 	//testSuite(temp, rawInput);  commented out for production
-
+	
 	return temp;
 }
-bool isValid(arguments * args) {
-
+bool isValid(arguments* args) {
+	char * head = *args->argv;
 	char* comp = *args->argv;
-
+	bool tf = true;
+	cout<<comp<<endl;
 	if (strcmp("cd", comp)==0){
 		chdir(&comp[3]);
-		return false;
+		tf = false;
 	}
 	else if(strcmp("pwd", comp)==0) {
 		char* WD = get_current_dir_name();
 		cout<<*WD<<endl;
 		delete WD;
-		return false;
+		tf = false;
 	}
 	else if(strcmp("quit", comp)==0){
 		run = false;
+		tf = false;
 	}
-	return true;
+	
+	*args->argv = head;
+	return tf;
 }
+
 arguments* writePrompt() {
 	cout << ">";
 	return readPrompt();
 }
 
 void testArgs(arguments* args) { //just tests using our args class
-
+	char * head = *args->argv;
 	char* ptr = (*args->argv);
 	cout << "there are " << (args->argc) << " arguments" << endl;
 	for (int i = 0; i < args->argc; ++i, ++ptr) {
@@ -110,6 +123,8 @@ void testArgs(arguments* args) { //just tests using our args class
 		}
 		cout << '\n';
 	}
+	*args->argv = head;
+
 }
 
 void testSuite(arguments* args, string input) {
