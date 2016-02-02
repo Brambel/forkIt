@@ -15,7 +15,7 @@ using namespace std;
 struct arguments
 {
 	int argc;
-	char **argv;
+	char *argv[];
 };
 
 arguments* readPrompt();
@@ -25,7 +25,7 @@ void testSuite(arguments, string);
 bool isValid(arguments*);
 
 bool run;
-extern char **environ;
+
 int main()
 {
 	
@@ -33,23 +33,34 @@ int main()
 	while (run) {
 	
 		arguments * temp = writePrompt();
-		
+		//char* head = *temp->argv;
+		//char* arg[] = {"ls", "-l", NULL};
+		//temp->argv = arg;
+		//testArgs(temp);
 		if (isValid(temp)) {
-			int status;
 
+			int status;
+			long head = (long)*temp->argv;
+			long mHead = (long) temp->argv;
 			if (fork() != 0) {
+				*temp->argv =(char*) head;
 				//parent
-				cout<<"parent thread start"<<endl;
+				//cout<<"parent thread start"<<endl;
+
 				waitpid(-1, &status, 0);
-				cout<<"parent thread end\n";
+				//cout<<"parent thread end\n";
 			}
 			else {
+				//printf("head: %u", head);
+				*temp->argv = (char*)head;
+				//temp->argv = (char**)mHead;
 				//child
-				//char* arg[] = {"ls", "-l", NULL};
+				char* arg[] = {"ls", "-l", NULL};
 				//execvp(arg[0],arg);
-				cout<<"child start\n";
+				//cout<<"child start\n";
+				//testArgs(temp);
 				execvp(temp->argv[0], temp->argv);
-				cout<<"failed\n";
+				//cout<<"failed\n";
 				return 0;
 			}
 		}
@@ -65,27 +76,28 @@ arguments* readPrompt() {
 	string rawInput;
 	getline(std::cin,rawInput);
 	temp->argc = 1;
-	char* ptr = new char[rawInput.length()+1];
+	char* ptr = new char[rawInput.length()];
 	
-	char* head = ptr;   //create unchanging head refrence  so we don't advance as we create new array
+	*temp->argv = ptr;   //create unchanging head refrence  so we don't advance as we create new array
 	
 
-	for (int i = 0; i < rawInput.length()+1; ++i, ++ptr) {//need to catch terminating null
+	for (int i = 0; i < rawInput.length(); ++i, ++ptr) {//need to catch terminating null
 		if (rawInput[i] == ' ') {
 			rawInput[i] = NULL;
 			temp->argc += 1;
 		}
-		(*ptr) = rawInput[i];
+		(*ptr) = rawInput[i]; //the deep copy
 	}
-	temp->argv = (&head);
 	//testSuite(temp, rawInput);  commented out for production
 	
 	return temp;
 }
 bool isValid(arguments* args) {
-	char * head = *args->argv;
-	char* comp = *args->argv;
+
+	char* comp = (*args->argv);
+
 	bool tf = true;
+	
 	if (strcmp("cd", comp)==0){
 		chdir(&comp[3]);
 		tf = false;
@@ -100,8 +112,7 @@ bool isValid(arguments* args) {
 		run = false;
 		tf = false;
 	}
-	
-	*args->argv = head;
+	*args->argv=comp;	
 	return tf;
 }
 
@@ -119,6 +130,9 @@ void testArgs(arguments* args) { //just tests using our args class
 			cout << (*ptr);
 			++ptr;
 		}
+		if(*ptr==NULL){
+			cout<<"\'null\'";
+		}	
 		cout << '\n';
 	}
 	*args->argv = head;
