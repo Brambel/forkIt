@@ -6,6 +6,7 @@
 #include <sys/wait.h>
 #include <iostream>
 #include <cstring>
+#include <fcntl.h>
 
 
 #define sizeLim 10
@@ -15,7 +16,7 @@ using namespace std;
 struct arguments
 {
 	int argc;
-	char *argv[];
+	char **argv;
 };
 
 arguments* readPrompt();
@@ -23,6 +24,8 @@ arguments* writePrompt();
 void testArgs(arguments*);
 void testSuite(arguments, string);
 bool isValid(arguments*);
+int redirectLeft(arguments*);
+int redirectRight(arguments*);
 
 bool run;
 
@@ -33,61 +36,79 @@ int main()
 	while (run) {
 	
 		arguments * temp = writePrompt();
-		//char* head = *temp->argv;
-		//char* arg[] = {"ls", "-l", NULL};
-		//temp->argv = arg;
 		//testArgs(temp);
+		int in = redirectRight(temp);
+		int out = redirectLeft(temp);
+		
+		if(in>-1){
+			dup2(in, 0);
+		}
+		if(out>-1){
+			dup2(out,1);
+		}
+
 		if (isValid(temp)) {
 
 			int status;
 			long head = (long)*temp->argv;
 			long mHead = (long) temp->argv;
 			if (fork() != 0) {
-				*temp->argv =(char*) head;
 				//parent
-				//cout<<"parent thread start"<<endl;
-
+				*temp->argv =(char*) head;
 				waitpid(-1, &status, 0);
-				//cout<<"parent thread end\n";
+
+				if(in>-1){
+					close(in);
+				}
+				if(out>-1){
+					close(out);
+				}
 			}
 			else {
-				//printf("head: %u", head);
-				*temp->argv = (char*)head;
-				//temp->argv = (char**)mHead;
 				//child
-				char* arg[] = {"ls", "-l", NULL};
-				//execvp(arg[0],arg);
-				//cout<<"child start\n";
-				//testArgs(temp);
+				*temp->argv = (char*)head;
+
 				execvp(temp->argv[0], temp->argv);
-				//cout<<"failed\n";
+				cout<<"process failed, likley due to unknown command\n";
 				return 0;
 			}
 		}
-		//system("pause");
 	}
 
-	//system("pause");
     return 0;
 }
 
 arguments* readPrompt() {
 	arguments* temp = new arguments;
 	string rawInput;
+	int aryLen =10;
 	getline(std::cin,rawInput);
 	temp->argc = 1;
-	char* ptr = new char[rawInput.length()];
+	char** ptr = new char*[aryLen];
+	temp->argv=ptr;
 	
-	*temp->argv = ptr;   //create unchanging head refrence  so we don't advance as we create new array
-	
+	int start = 0;
+	int end=0;
+	for (int i=0; start < rawInput.length();start=(end+=1), ++i){//we set start to begining of next segment
 
-	for (int i = 0; i < rawInput.length(); ++i, ++ptr) {//need to catch terminating null
-		if (rawInput[i] == ' ') {
-			rawInput[i] = NULL;
-			temp->argc += 1;
+		if(i==aryLen){
+			aryLen+=10;
+			char** tempPtr= new char*[aryLen];
+			for(int j=0;j<i;++j){
+				tempPtr[j]=ptr[j];
+			}
+		ptr=tempPtr;		
 		}
-		(*ptr) = rawInput[i]; //the deep copy
+		end = rawInput.find(' ', start);//get the end of the next segment
+		if(end==-1){
+			end=rawInput.length();//were finished fall out naturally
+		}
+		rawInput[end]='\0';//change whitespace to NULL
+		ptr[i]=&rawInput[start]; //set a new charpointer to our new segment
+		
+		
 	}
+	ptr[rawInput.length()+1] = NULL;
 	//testSuite(temp, rawInput);  commented out for production
 	
 	return temp;
@@ -125,15 +146,9 @@ void testArgs(arguments* args) { //just tests using our args class
 	char * head = *args->argv;
 	char* ptr = (*args->argv);
 	cout << "there are " << (args->argc) << " arguments" << endl;
-	for (int i = 0; i < args->argc; ++i, ++ptr) {
-		while ((*ptr) != NULL) {
-			cout << (*ptr);
-			++ptr;
-		}
-		if(*ptr==NULL){
-			cout<<"\'null\'";
-		}	
-		cout << '\n';
+	while(ptr!= NULL){
+		cout<<*ptr<<endl;
+		++ptr;
 	}
 	*args->argv = head;
 
@@ -148,4 +163,34 @@ void testSuite(arguments* args, string input) {
 		}
 	}
 
+}
+
+int redirectLeft(arguments* args){
+	char* comp;
+	for(int i=0;i<args->argc;i++){
+		comp=args->argv[i];
+		if(strcmp("<", comp)==0){
+			return open(args->argv[i+1], O_RDONLY);
+		}
+		else if(strcmp("<<", comp)==0){
+			return open(args->argv[i+1], O_RDONLY);			
+		}
+	}
+	return -1;
+}
+
+int redirectRight(arguments* args){
+	char* comp;
+	for(int i=0;i<args->argc;i++){
+		comp=args->argv[i];
+		if(strcmp(">", comp)==0){
+			return open(args->argv[i+1], O_WRONLY |O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+		}
+		else if(strcmp(">>", comp)==0){
+			int temp;
+			return open(args->argv[i+1], O_WRONLY |O_APPEND | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+			return temp;			
+		}
+	}
+	return -1;
 }
