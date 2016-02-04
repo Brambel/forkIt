@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <iostream>
 #include <cstring>
 #include <fcntl.h>
@@ -36,7 +37,7 @@ int main()
 	while (run) {
 	
 		arguments * temp = writePrompt();
-		//testArgs(temp);
+
 		int in = redirectRight(temp);
 		int out = redirectLeft(temp);
 		
@@ -83,13 +84,13 @@ arguments* readPrompt() {
 	string rawInput;
 	int aryLen =10;
 	getline(std::cin,rawInput);
-	temp->argc = 1;
 	char** ptr = new char*[aryLen];
 	temp->argv=ptr;
 	
 	int start = 0;
 	int end=0;
-	for (int i=0; start < rawInput.length();start=(end+=1), ++i){//we set start to begining of next segment
+	int i=0;
+	for (; start < rawInput.length();start=(end+=1), ++i){//we set start to begining of next segment
 
 		if(i==aryLen){
 			aryLen+=10;
@@ -97,6 +98,7 @@ arguments* readPrompt() {
 			for(int j=0;j<i;++j){
 				tempPtr[j]=ptr[j];
 			}
+		delete ptr;
 		ptr=tempPtr;		
 		}
 		end = rawInput.find(' ', start);//get the end of the next segment
@@ -104,12 +106,10 @@ arguments* readPrompt() {
 			end=rawInput.length();//were finished fall out naturally
 		}
 		rawInput[end]='\0';//change whitespace to NULL
-		ptr[i]=&rawInput[start]; //set a new charpointer to our new segment
-		
-		
+		ptr[i]=&rawInput[start]; //set a new charpointer to our new segment	
 	}
-	ptr[rawInput.length()+1] = NULL;
-	//testSuite(temp, rawInput);  commented out for production
+	temp->argc=++i;
+	temp->argv[i]=NULL;
 	
 	return temp;
 }
@@ -167,7 +167,7 @@ void testSuite(arguments* args, string input) {
 
 int redirectLeft(arguments* args){
 	char* comp;
-	for(int i=0;i<args->argc;i++){
+	for(int i=0;i<args->argc-1;i++){
 		comp=args->argv[i];
 		if(strcmp("<", comp)==0){
 			return open(args->argv[i+1], O_RDONLY);
@@ -181,14 +181,14 @@ int redirectLeft(arguments* args){
 
 int redirectRight(arguments* args){
 	char* comp;
-	for(int i=0;i<args->argc;i++){
+	for(int i=0;i<args->argc-1;i++){
 		comp=args->argv[i];
 		if(strcmp(">", comp)==0){
-			return open(args->argv[i+1], O_WRONLY |O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+			return open(args->argv[i+1], O_WRONLY |O_TRUNC | O_CREAT);
 		}
 		else if(strcmp(">>", comp)==0){
 			int temp;
-			return open(args->argv[i+1], O_WRONLY |O_APPEND | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+			return open(args->argv[i+1], O_WRONLY |O_APPEND | O_CREAT);
 			return temp;			
 		}
 	}
